@@ -1,0 +1,6 @@
+# .streamlit/config.toml
+[theme]
+primaryColor = "#2ECC71"      # 메인 초록색
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F5F5"
+textColor = "#262730"

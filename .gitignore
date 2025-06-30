@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+# Windows 임베디드 파이썬·site-packages·ZIP
+python/
+site-packages/
+DJToolkit_win.zip
+DJToolkit_mac.zip
