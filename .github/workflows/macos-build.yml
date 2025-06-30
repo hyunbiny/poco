@@ -1,32 +1,31 @@
-# .github/workflows/macos-build.yml
 name: Build macOS DMG
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: [main]          # main 브랜치 갱신 시마다 실행
+  workflow_dispatch:          # GitHub 웹에서 수동 실행 버튼
 
 jobs:
   build-mac:
-    runs-on: macos-latest
+    runs-on: macos-latest     # macOS 러너 (Apple Silicon / Intel)
 
     steps:
     # 1. 소스 체크아웃
     - uses: actions/checkout@v4
 
-    # 2. Python 3.11
+    # 2. Python 3.11 설치
     - uses: actions/setup-python@v5
       with:
-        python-version: "3.11"
+        python-version: '3.11'
 
-    # 3. PyInstaller & dmgbuild 설치
-    - name: Install deps
+    # 3. 의존성 – PyInstaller + dmgbuild
+    - name: Install build tools
       run: |
         python -m pip install --upgrade pip
         python -m pip install -r requirements.txt
         python -m pip install pyinstaller==6.14.1 dmgbuild
 
-    # 4. .app 번들 만들기
+    # 4. PyInstaller로 .app 번들 생성
     - name: Build .app bundle
       run: |
         pyinstaller run_app.py \
@@ -40,23 +39,24 @@ jobs:
           --collect-all mutagen \
           --collect-submodules soundfile
 
-    # 5-A. dmgbuild 설정 파일 작성
-    - name: Generate dmgbuild settings
+    # 5-A. dmgbuild 설정 파일 작성 (경로 직접 기입 → 변수 사용 안 함)
+    - name: Write dmgbuild settings
       run: |
-        cat <<'PY' > settings.py
-        files = [app]          # DMG에 포함될 항목
+        cat > settings.py <<'PY'
+        files = ["dist/DJToolkit.app"]      # DMG 안에 들어갈 항목
         dmg_properties = {
-            'volume-name': 'DJToolkit',
+            "volume-name": "DJToolkit",
         }
         PY
 
     # 5-B. DMG 생성
     - name: Create DMG
       run: |
-        dmgbuild -s settings.py -D app=dist/DJToolkit.app \
-                 "DJToolkit" DJToolkit_mac.dmg
+        dmgbuild -s settings.py \
+                 "DJToolkit" \
+                 DJToolkit_mac.dmg
 
-    # 6. 결과 DMG 업로드
+    # 6. 결과물 업로드 (Artifacts)
     - uses: actions/upload-artifact@v4
       with:
         name: DJToolkit_mac.dmg
