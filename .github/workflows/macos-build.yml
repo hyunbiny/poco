@@ -2,28 +2,32 @@ name: Build macOS DMG
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: [ main ]       # main 브랜치에 커밋될 때마다 실행
+  workflow_dispatch:         # GitHub 웹에서 수동 실행 버튼
 
 jobs:
   build-mac:
-    runs-on: macos-latest
+    runs-on: macos-latest    # GitHub macOS 러너
 
     steps:
+    # 1) 코드 체크아웃
     - uses: actions/checkout@v4
 
+    # 2) Python 3.11 설치
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    - name: Install deps
+    # 3) 의존성 설치 (PyInstaller + create-dmg)
+    - name: Install dependencies
       run: |
-        brew install create-dmg          # Homebrew 버전
+        brew install create-dmg              # DMG 생성 툴 (Homebrew)
         python -m pip install -r requirements.txt
         python -m pip install pyinstaller==6.14.1
 
-    - name: Build app
+    # 4) PyInstaller로 .app 번들 생성
+    - name: Build .app bundle
       run: |
         pyinstaller run_app.py \
           --name DJToolkit \
@@ -36,11 +40,14 @@ jobs:
           --collect-all mutagen \
           --collect-submodules soundfile
 
+    # 5) DMG 패키징
     - name: Create DMG
       run: |
-        create-dmg dist/DJToolkit.app --overwrite
-        mv DJToolkit-*.dmg DJToolkit_mac.dmg
+        create-dmg --overwrite --volname "DJToolkit" \
+                   dist/DJToolkit.app \
+                   DJToolkit_mac.dmg
 
+    # 6) 빌드 결과 업로드 (Artifacts)
     - uses: actions/upload-artifact@v4
       with:
         name: DJToolkit_mac.dmg
